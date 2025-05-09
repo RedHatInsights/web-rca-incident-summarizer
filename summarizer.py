@@ -15,7 +15,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.spinner import Spinner
 from rich.traceback import install
-
 from wordmill.llm import llm_client
 
 log = logging.getLogger(__name__)
@@ -200,13 +199,13 @@ def _filter_keys(incident: dict) -> None:
 
 def _process_incident(incident: dict) -> dict:
     public_id = incident["incident_id"]
-    log.info("Processing incident '%s' ...", public_id)
+    log.debug("Processing incident '%s' ...", public_id)
 
     incident_id = incident["id"]
 
     api_path = f"/incidents/{incident_id}/events"
     params = {
-        "order_by": "occurred_at desc",
+        "order_by": "occurred_at asc",
         "page": 1,
         "size": 999,
     }
@@ -303,6 +302,43 @@ def summarize_incident_and_update_webrca(prompt, incident, console=None):
     _patch(api_path, json_data={"ai_summary": summary_md})
 
 
+def _get_last_change_time(incident) -> datetime:
+    id = incident["id"]
+
+    # get incident "last_changed_at" time
+    incident_last_changed_at = datetime.fromisoformat(incident["last_changed_at"])
+    log.debug("incident_last_changed_at: %s", incident_last_changed_at)
+
+    # get last updated event
+    api_path = f"/incidents/{id}/events"
+    params = {"order_by": "updated_at desc", "size": "1", "show_system_events": "false"}
+    response = _get(api_path, params)
+    events_last_changed_at = datetime.min.replace(tzinfo=timezone.utc)
+    if response["items"]:
+        events_last_changed_at = datetime.fromisoformat(
+            response["items"][0]["updated_at"]
+        )
+    log.debug("events_last_changed_at: %s", events_last_changed_at)
+
+    # get last updated follow-up
+    api_path = f"/incidents/{id}/follow_ups"
+    params = {"order_by": "updated_at desc", "size": "1"}
+    response = _get(api_path, params)
+    follow_ups_last_changed_at = datetime.min.replace(tzinfo=timezone.utc)
+    if response["items"]:
+        follow_ups_last_changed_at = datetime.fromisoformat(
+            response["items"][0]["updated_at"]
+        )
+    log.debug("follow_ups_last_changed_at: %s", follow_ups_last_changed_at)
+
+    changed_at = max(
+        incident_last_changed_at, events_last_changed_at, follow_ups_last_changed_at
+    )
+    log.debug("final changed_at: %s", changed_at)
+
+    return changed_at
+
+
 def _get_incidents_to_update(max_days_since_update: int) -> list[dict]:
     if max_days_since_update:
         since_time = datetime.now(tz=timezone.utc) - timedelta(
@@ -316,25 +352,29 @@ def _get_incidents_to_update(max_days_since_update: int) -> list[dict]:
     incidents_to_update = []
 
     for incident in incidents:
-        id = incident["id"]
-        updated_time = datetime.fromisoformat(incident["updated_at"])
-        ai_summary_updated_at = incident.get("ai_summary_updated_at")
-        if ai_summary_updated_at:
-            ai_summary_updated_time = datetime.fromisoformat(ai_summary_updated_at)
-        else:
-            ai_summary_updated_time = datetime.min.replace(tzinfo=timezone.utc)
+        changed_at = _get_last_change_time(incident)
 
-        if updated_time < since_time:
-            log.debug(
+        ai_summary_updated_at = datetime.min.replace(tzinfo=timezone.utc)
+        if "ai_summary_updated_at" in incident:
+            ai_summary_updated_at = datetime.fromisoformat(
+                incident["ai_summary_updated_at"]
+            )
+
+        log.debug("ai_summary_updated_at: %s", ai_summary_updated_at)
+
+        public_id = incident["incident_id"]
+
+        if changed_at < since_time:
+            log.info(
                 "incident %s last updated more than %d days ago, skipping",
-                id,
+                public_id,
                 max_days_since_update,
             )
-        elif updated_time > ai_summary_updated_time:
-            log.debug("incident %s needs AI summary updated", id)
+        elif changed_at > ai_summary_updated_at:
+            log.info("incident %s needs AI summary updated", public_id)
             incidents_to_update.append(incident)
         else:
-            log.debug("incident %s summary up-to-date")
+            log.info("incident %s summary up-to-date", public_id)
 
     return incidents_to_update
 
