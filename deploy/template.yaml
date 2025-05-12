@@ -1,0 +1,93 @@
+---
+kind: Template
+apiVersion: template.openshift.io/v1
+metadata:
+  name: web-rca-incident-summarizer
+
+parameters:
+  - name: SCHEDULE
+    value: "* * * * *"
+  - name: SUSPEND
+    value: "false"
+  - name: SECRET_NAME
+    value: web-rca-incident-summarizer
+  - name: CPU_LIMIT
+    value: 1000m
+  - name: MEMORY_LIMIT
+    value: 1Gi
+  - name: CPU_REQUEST
+    value: 1000m
+  - name: MEMORY_REQUEST
+    value: 1Gi
+  - name: IMAGE
+    value: quay.io/redhat-services-prod/hcm-eng-prod-tenant/web-rca-incident-summarizer
+  - name: IMAGE_TAG
+    value: latest
+  - name: MAX_WORKERS
+    value: "3"
+  - name: WEBRCA_V1_API_BASE_URL
+    value: "https://web-rca:8000/api/web-rca/v1"
+  - name: LLM_BASE_URL
+    value: https://your-llm-service:443/v1
+  - name: LLM_MODEL_NAME
+    value: your-model
+
+objects:
+- kind: Secret
+  apiVersion: v1
+  metadata:
+    name: web-rca-incident-summarizer
+  stringData:
+    llm_api_key: your-api-key
+    sso_offline_token: your-ocm-offline-token
+  type: Opaque
+
+- kind: CronJob
+  apiVersion: batch/v1
+  metadata:
+    name: web-rca-incident-summarizer
+    labels:
+      app.kubernetes.io/name: web-rca-incident-summarizer
+  spec:
+    suspend: ${{SUSPEND}}
+    schedule: ${SCHEDULE}
+    concurrencyPolicy: "Forbid"
+    jobTemplate:
+      spec:
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/name: web-rca-incident-summarizer
+          spec:
+            containers:
+              - name: summarizer
+                command: ["python", "summarizer.py", "worker"]
+                env:
+                  - name: MAX_WORKERS
+                    value: ${MAX_WORKERS}
+                  - name: WEBRCA_V1_API_BASE_URL
+                    value: ${WEBRCA_V1_API_BASE_URL}
+                  - name: LLM_BASE_URL
+                    value: ${LLM_BASE_URL}
+                  - name: LLM_MODEL_NAME
+                    value: ${LLM_MODEL_NAME}
+                  - name: LLM_API_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: ${SECRET_NAME}
+                        key: llm_api_key
+                  - name: SSO_OFFLINE_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: ${SECRET_NAME}
+                        key: sso_offline_token
+                resources:
+                  requests:
+                    memory: ${MEMORY_REQUEST}
+                    cpu: ${CPU_REQUEST}
+                  limits:
+                    memory: ${MEMORY_LIMIT}
+                    cpu: ${CPU_LIMIT}
+                imagePullPolicy: IfNotPresent
+                image: ${IMAGE}:${IMAGE_TAG}
+            restartPolicy: Never
