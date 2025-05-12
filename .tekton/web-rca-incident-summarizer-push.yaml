@@ -11,7 +11,7 @@ metadata:
       == "main"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: web-rca-incident-summarizer
+    appstudio.openshift.io/application: web-rca-external
     appstudio.openshift.io/component: web-rca-incident-summarizer
     pipelines.appstudio.openshift.io/type: build
   name: web-rca-incident-summarizer-on-push
@@ -23,9 +23,11 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcm-eng-prod-tenant/web-rca-incident-summarizer:{{revision}}
+    value: quay.io/redhat-user-workloads/hcm-eng-prod-tenant/web-rca/web-rca-incident-summarizer:{{revision}}
   - name: dockerfile
     value: Dockerfile
+  - name: path-context
+    value: .
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
