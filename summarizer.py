@@ -25,6 +25,7 @@ WEBRCA_V1_API_BASE_URL = os.environ.get(
     "WEBRCA_V1_API_BASE_URL", "https://api.openshift.com/api/web-rca/v1"
 ).lstrip("/")
 WEBRCA_TOKEN = os.environ.get("WEBRCA_TOKEN")
+STATUS_TYPES = os.environ.get("STATUS_TYPES", "new,ongoing,paused,resolved,closed")
 
 SSO_AUTH_URL = os.environ.get("SSO_AUTH_URL", "https://sso.redhat.com/auth/")
 SSO_CLIENT_ID = os.environ.get("SSO_CLIENT_ID", "cloud-services")
@@ -239,9 +240,23 @@ def get_incident(public_id: str) -> dict:
     return incident
 
 
+def _parse_status_types(status_types: str) -> str:
+    split = status_types.lower().split(",")
+    to_lowercase = []
+    for status in split:
+        if status.lower() not in ("new", "ongoing", "paused", "closed", "resolved"):
+            raise ValueError(f"invalid status type: {status}")
+        to_lowercase.append(status.lower())
+    return ",".join(to_lowercase)
+
+
 def get_all_incidents() -> dict:
+    params = None
+    if STATUS_TYPES:
+        status_param = _parse_status_types(STATUS_TYPES)
+        params = {"status": status_param}
     api_path = "/incidents"
-    return _get_all_items(api_path)
+    return _get_all_items(api_path, params=params)
 
 
 def _wait_with_spinner(console, handler):
@@ -306,7 +321,9 @@ def _get_last_change_time(incident) -> datetime:
     id = incident["id"]
 
     # get incident "last_changed_at" time
-    incident_last_changed_at = datetime.fromisoformat(incident["last_changed_at"])
+    incident_last_changed_at = datetime.min.replace(tzinfo=timezone.utc)
+    if "last_changed_at" in incident:
+        incident_last_changed_at = datetime.fromisoformat(incident["last_changed_at"])
     log.debug("incident_last_changed_at: %s", incident_last_changed_at)
 
     # get last updated event
