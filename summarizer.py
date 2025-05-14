@@ -371,7 +371,7 @@ def _get_incidents_to_update(max_days_since_update: int) -> list[dict]:
     for incident in incidents:
         changed_at = _get_last_change_time(incident)
 
-        ai_summary_updated_at = datetime.min.replace(tzinfo=timezone.utc)
+        ai_summary_updated_at = None
         if "ai_summary_updated_at" in incident:
             ai_summary_updated_at = datetime.fromisoformat(
                 incident["ai_summary_updated_at"]
@@ -387,7 +387,7 @@ def _get_incidents_to_update(max_days_since_update: int) -> list[dict]:
                 public_id,
                 max_days_since_update,
             )
-        elif changed_at > ai_summary_updated_at:
+        elif not ai_summary_updated_at or changed_at > ai_summary_updated_at:
             log.info("incident %s needs AI summary updated", public_id)
             incidents_to_update.append(incident)
         else:
@@ -442,11 +442,13 @@ def worker(max_days_since_update):
 
     errors = 0
     successes = 0
+    total = 0
 
     future_to_incident = {}
     for incident in incidents_to_update:
         future = executor.submit(summarize_incident_and_update_webrca, prompt, incident)
         future_to_incident[future] = incident["incident_id"]
+        total += 1
 
     for future in concurrent.futures.as_completed(future_to_incident):
         incident_id = future_to_incident[future]
@@ -460,7 +462,8 @@ def worker(max_days_since_update):
             successes += 1
 
     log.info(
-        "incident summarization worker completed (%d errors, %d successes)",
+        "incident summarization worker completed (%d total, %d errors, %d successes)",
+        total,
         errors,
         successes,
     )
