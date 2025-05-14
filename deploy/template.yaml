@@ -6,7 +6,7 @@ metadata:
 
 parameters:
   - name: SCHEDULE
-    value: "* * * * *"
+    value: "*/5 * * * *"
   - name: SUSPEND
     value: "false"
   - name: SECRET_NAME
@@ -31,6 +31,9 @@ parameters:
     value: https://your-llm-service:443/v1
   - name: LLM_MODEL_NAME
     value: your-model
+  - name: STATUS_TYPES
+    value: "new,ongoing,paused,resolved,closed"
+
 
 objects:
 - kind: Secret
@@ -65,6 +68,8 @@ objects:
                 env:
                   - name: MAX_WORKERS
                     value: ${MAX_WORKERS}
+                  - name: STATUS_TYPES
+                    value: ${STATUS_TYPES}
                   - name: WEBRCA_V1_API_BASE_URL
                     value: ${WEBRCA_V1_API_BASE_URL}
                   - name: LLM_BASE_URL
