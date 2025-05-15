@@ -5,6 +5,8 @@ metadata:
   name: web-rca-incident-summarizer
 
 parameters:
+  - name: CRONJOB_NAME
+    value: web-rca-incident-summarizer
   - name: SCHEDULE
     value: "*/5 * * * *"
   - name: SUSPEND
@@ -48,7 +50,7 @@ objects:
 - kind: CronJob
   apiVersion: batch/v1
   metadata:
-    name: web-rca-incident-summarizer
+    name: ${CRONJOB_NAME}
     labels:
       app.kubernetes.io/name: web-rca-incident-summarizer
   spec:
