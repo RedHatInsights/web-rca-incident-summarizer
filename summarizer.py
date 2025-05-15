@@ -28,8 +28,9 @@ WEBRCA_TOKEN = os.environ.get("WEBRCA_TOKEN")
 STATUS_TYPES = os.environ.get("STATUS_TYPES", "new,ongoing,paused,resolved,closed")
 
 SSO_AUTH_URL = os.environ.get("SSO_AUTH_URL", "https://sso.redhat.com/auth/")
-SSO_CLIENT_ID = os.environ.get("SSO_CLIENT_ID", "cloud-services")
 SSO_REALM_NAME = os.environ.get("SSO_REALM_NAME", "redhat-external")
+SSO_CLIENT_ID = os.environ.get("SSO_CLIENT_ID", "cloud-services")
+SSO_CLIENT_SECRET = os.environ.get("SSO_CLIENT_SECRET")
 SSO_OFFLINE_TOKEN = os.environ.get("SSO_OFFLINE_TOKEN")
 
 
@@ -42,10 +43,19 @@ class TokenManager:
         keycloak_openid = KeycloakOpenID(
             server_url=SSO_AUTH_URL,
             client_id=SSO_CLIENT_ID,
+            client_secret_key=SSO_CLIENT_SECRET,
             realm_name=SSO_REALM_NAME,
         )
 
-        token = keycloak_openid.refresh_token(SSO_OFFLINE_TOKEN)
+        if SSO_OFFLINE_TOKEN:
+            token = keycloak_openid.refresh_token(SSO_OFFLINE_TOKEN)
+        elif SSO_CLIENT_ID and SSO_CLIENT_SECRET:
+            token = keycloak_openid.token(grant_type="client_credentials")
+        else:
+            raise ValueError(
+                "need SSO_CLIENT_ID/SSO_CLIENT_SECRET or SSO_OFFLINE_TOKEN defined"
+            )
+
         self.access_token = token["access_token"]
         self.expires_at = time.time() + token["expires_in"]
         return self.access_token
@@ -53,11 +63,6 @@ class TokenManager:
     def get_access_token(self):
         if WEBRCA_TOKEN:
             return WEBRCA_TOKEN
-
-        elif not SSO_OFFLINE_TOKEN:
-            raise ValueError(
-                "missing 1 of the following required environment vars: WEBRCA_TOKEN, SSO_OFFLINE_TOKEN"
-            )
 
         if not self.access_token or time.time() - 180 > self.expires_at:
             return self._get_new_token()

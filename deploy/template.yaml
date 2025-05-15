@@ -44,7 +44,8 @@ objects:
     name: web-rca-incident-summarizer
   stringData:
     llm_api_key: your-api-key
-    sso_offline_token: your-ocm-offline-token
+    sso_client_id: your-client-id
+    sso_client_secret: your-client-secret
   type: Opaque
 
 - kind: CronJob
@@ -83,11 +84,16 @@ objects:
                       secretKeyRef:
                         name: ${SECRET_NAME}
                         key: llm_api_key
-                  - name: SSO_OFFLINE_TOKEN
+                  - name: SSO_CLIENT_ID
                     valueFrom:
                       secretKeyRef:
                         name: ${SECRET_NAME}
-                        key: sso_offline_token
+                        key: sso_client_id
+                  - name: SSO_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: ${SECRET_NAME}
+                        key: sso_client_secret
                 resources:
                   requests:
                     memory: ${MEMORY_REQUEST}
