@@ -42,7 +42,11 @@ WEBRCA_TOKEN=$(ocm token) python summarizer.py generate --id ITN-2025-00094
 The 'worker' subcommand fetches all incidents from WebRCA, generates summaries, and then uses the API to update the incident's "ai_summary" field.
 
 - It runs tasks in a threadpool.
-- Summaries are only generated for incidents which have an "ai_summary_updated_at" time older than "updated_at" time.
+- Summaries are only generated for incidents which meet these criteria:
+    - `ai_summary_updated_at` time is older than the incident's `changed_at` time, or
+    - new follow-ups have been added since `ai_summary_updated_at`, or
+    - new events (non-system events) have occurred since `ai_summary_updated_at`
+
 
 Example environment variable configuration:
 ```bash
