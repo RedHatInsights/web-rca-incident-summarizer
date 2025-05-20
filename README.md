@@ -62,3 +62,5 @@ Then the script can be invoked with:
 ```shell
 pipenv run python summarizer.py worker
 ```
+
+For production deployments, `SSO_CLIENT_ID` and `SSO_CLIENT_SECRET` are recommended to be set instead of utilizing `SSO_OFFLINE_TOKEN`
