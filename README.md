@@ -48,8 +48,9 @@ Example environment variable configuration:
 ```bash
 LOG_LEVEL=INFO
 MAX_WORKERS=3
-SSO_OFFLINE_TOKEN=<offline token>
-LLM_API_KEY=<your key>
+WEBRCA_V1_API_BASE_URL="https://api.stage.openshift.com/api/web-rca/v1"
+SSO_OFFLINE_TOKEN="<offline token>"
+LLM_API_KEY="<your key>"
 LLM_BASE_URL="https://your-llm-service:443/v1"
 LLM_MODEL_NAME="your-model"
 ```
