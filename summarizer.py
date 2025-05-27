@@ -64,7 +64,7 @@ class TokenManager:
         if WEBRCA_TOKEN:
             return WEBRCA_TOKEN
 
-        if not self.access_token or time.time() - 180 > self.expires_at:
+        if not self.access_token or time.time() >= self.expires_at - 30:
             return self._get_new_token()
 
         return self.access_token
