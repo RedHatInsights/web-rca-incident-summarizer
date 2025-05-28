@@ -214,6 +214,7 @@ def _process_incident(incident: dict) -> dict:
         "order_by": "occurred_at asc",
         "page": 1,
         "size": 999,
+        "event_type": "comment,follow_up,escalation,external_reference,audit",
     }
 
     _filter_keys(incident)
@@ -333,7 +334,11 @@ def _get_last_change_time(incident) -> datetime:
 
     # get last updated event
     api_path = f"/incidents/{id}/events"
-    params = {"order_by": "updated_at desc", "size": "1", "show_system_events": "false"}
+    params = {
+        "order_by": "updated_at desc",
+        "size": "1",
+        "event_type": "comment,follow_up,escalation,external_reference",
+    }
     response = _get(api_path, params)
     events_last_changed_at = datetime.min.replace(tzinfo=timezone.utc)
     if response["items"]:
