@@ -214,7 +214,7 @@ def _process_incident(incident: dict) -> dict:
         "order_by": "occurred_at asc",
         "page": 1,
         "size": 999,
-        "event_type": "comment,follow_up,escalation,external_reference,audit",
+        "event_type": "comment,follow_up,escalation,external_reference,audit_log",
     }
 
     _filter_keys(incident)
