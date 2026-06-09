@@ -699,11 +699,11 @@
         },
         "openai": {
             "hashes": [
-                "sha256:798694c6cf74145541fda94325b6f8f72d8e1fd0262cc137c8d728177a6a4ce3",
-                "sha256:ec6661c57b2dcc47414a767e6e3335c7ed3d19c9696999283a3c82e95c756a3c"
+                "sha256:2b205637ff214477f9ce9ab035e9f494db0e3fa8f1e599008953735fbf6ff1ff",
+                "sha256:9a756f91f274a24ad6026cbcb2042fd356c8d4a10e8f347b08d34465e585f7a2"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==2.38.0"
+            "version": "==2.40.0"
         },
         "packaging": {
             "hashes": [
@@ -1528,11 +1528,11 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:2ca543c713b72840ceffd94e9bdedfbd09a661defa1f7f69e5429ad4059442e2",
-                "sha256:caf4ff72d1b4039057f41d8e8466e859513d67c0400d9c6b62c02c9d1ebc3e12"
+                "sha256:38e6ee0a555615c0ea9da2ac7e9998fe8dc3b911dd33ad8eaad2020957653b0c",
+                "sha256:854210ca524a1a4d0d744734f4acbc721c3ffe163b85bbf5d56d14d5ae2f0fae"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==21.4.1"
+            "version": "==21.4.2"
         },
         "wcwidth": {
             "hashes": [
