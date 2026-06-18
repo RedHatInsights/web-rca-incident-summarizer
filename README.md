@@ -1,70 +1,83 @@
-# web-rca-incident-summarizer
+# Web RCA Incident Summarizer
 
-Fetches incident reports from WebRCA and summarizes them using a LLM service.
+Fetches incident reports from WebRCA and generates summaries using an LLM service. Supports both
+single-incident CLI mode and a background worker mode that continuously processes updated
+incidents.
+
+## Prerequisites
+
+- Python 3.12+
+- [pyenv][pyenv] (recommended)
+- [Pipenv][pipenv]
+- [OCM CLI][ocm-cli] (for authentication)
 
 ## Setup
 
-1. It is recommended to [install pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation).
-
-     NOTE: Make sure to follow all steps! (A, B, C, D, and so on)
-
+1. Install pyenv (follow all steps in the installation guide)
 2. Set up the virtual environment:
 
-    ```shell
-    pipenv install --dev
-    ```
+   ```sh
+   pipenv install --dev
+   ```
 
-3. Add your LLM access info into `.env`, example:
+3. Add LLM access info to `.env`:
 
-   ```bash
+   ```sh
    LLM_API_KEY=<your key>
    LLM_BASE_URL="https://your-llm-service:443/v1"
    LLM_MODEL_NAME="your-model"
    ```
 
-## Running CLI script
+## Usage
 
-The 'generate' subcommand will fetch a single incident from WebRCA and summarize it. The result will be printed to the CLI.
+### CLI Mode (Single Incident)
 
-1. Install [OCM CLI](https://github.com/openshift-online/ocm-cli)
+Generate a summary for a specific incident:
 
-2. Authenticate with OCM: `ocm login --use-auth-code`
-
-3. Run script for a given incident ID:
-
-```shell
+```sh
+ocm login --use-auth-code
 pipenv shell
 WEBRCA_TOKEN=$(ocm token) python summarizer.py generate --id ITN-2025-00094
 ```
 
-## Running as a worker
+### Worker Mode (Continuous Processing)
 
-The 'worker' subcommand fetches all incidents from WebRCA, generates summaries, and then uses the API to update the incident's "ai_summary" field.
+Processes all incidents that need updated summaries:
 
-- It runs tasks in a threadpool.
-- Summaries are only generated for incidents which meet these criteria:
-    - `ai_summary_updated_at` time is older than the incident's `changed_at` time, or
-    - new follow-ups have been added since `ai_summary_updated_at`, or
-    - new events (non-system events) have occurred since `ai_summary_updated_at`
-
-
-Example environment variable configuration:
-```bash
-LOG_LEVEL=INFO
-MAX_WORKERS=3
-WEBRCA_V1_API_BASE_URL="https://api.stage.openshift.com/api/web-rca/v1"
-SSO_OFFLINE_TOKEN="<offline token>"
-LLM_API_KEY="<your key>"
-LLM_BASE_URL="https://your-llm-service:443/v1"
-LLM_MODEL_NAME="your-model"
-```
-
-The environment variable `SSO_OFFLINE_TOKEN` should be set to a valid [OCM offline token](https://console.redhat.com/openshift/token)
-
-Then the script can be invoked with:
-
-```shell
+```sh
 pipenv run python summarizer.py worker
 ```
 
-For production deployments, `SSO_CLIENT_ID` and `SSO_CLIENT_SECRET` are recommended to be set instead of utilizing `SSO_OFFLINE_TOKEN`
+The worker generates summaries for incidents where:
+
+- `ai_summary_updated_at` is older than the incident's `changed_at` time
+- New follow-ups have been added since the last summary
+- New events (non-system) have occurred since the last summary
+
+### Environment Variables
+
+| Variable                  | Description                              | Default                                        |
+| ------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| `LLM_API_KEY`             | API key for the LLM service              | (required)                                     |
+| `LLM_BASE_URL`            | Base URL for the LLM API                 | (required)                                     |
+| `LLM_MODEL_NAME`          | Model name to use                        | (required)                                     |
+| `LOG_LEVEL`               | Logging level                            | `INFO`                                         |
+| `MAX_WORKERS`             | Thread pool size for worker mode         | `1`                                            |
+| `WEBRCA_V1_API_BASE_URL`  | WebRCA API base URL                      | `https://api.openshift.com/api/web-rca/v1`     |
+| `WEBRCA_TOKEN`            | OCM bearer token (CLI mode)              | (required for CLI)                              |
+| `SSO_OFFLINE_TOKEN`       | Red Hat SSO offline token (worker mode)  | (alternative to client credentials)             |
+| `SSO_CLIENT_ID`           | SSO client ID (production worker mode)   | (recommended for production)                    |
+| `SSO_CLIENT_SECRET`       | SSO client secret (production)           | (recommended for production)                    |
+
+## Deployment
+
+A Dockerfile is included for container deployment. An OpenShift deployment template is in
+`deploy/template.yaml`.
+
+## License
+
+No license file is included in this repository.
+
+[pyenv]: https://github.com/pyenv/pyenv
+[pipenv]: https://pipenv.pypa.io/
+[ocm-cli]: https://github.com/openshift-online/ocm-cli
