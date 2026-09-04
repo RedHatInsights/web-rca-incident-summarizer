@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/python-312:9.8-1780506588
+FROM registry.access.redhat.com/ubi9/python-312:9.8-1788412553
 
 # Add application sources with correct permissions for OpenShift
 USER 0
