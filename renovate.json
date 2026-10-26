@@ -14,7 +14,7 @@
     {
       "matchDatasources": [ "docker" ],
       "matchPackageNames": [
-        "registry.access.redhat.com/ubi9/python-312"
+        "registry.access.redhat.com/hi/python"
       ],
       "versioning": "redhat"
     }

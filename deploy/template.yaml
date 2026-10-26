@@ -68,7 +68,7 @@ objects:
           spec:
             containers:
               - name: summarizer
-                command: ["python", "summarizer.py", "worker"]
+                command: ["python3", "summarizer.py", "worker"]
                 env:
                   - name: MAX_WORKERS
                     value: ${MAX_WORKERS}
