@@ -1,5 +1,5 @@
 # Build stage: install dependencies into a virtualenv (no root required)
-FROM registry.access.redhat.com/hi/python:3.12-builder@sha256:617b920efed6bc406cb510550dcfb9fa6821fc0748c082b16380cf4a2d9dd991 AS build
+FROM registry.access.redhat.com/hi/python:3.12-builder@sha256:afb9e5506ae43c4812fd9f8d35897b08496e2fa617dd9cd9ba0b300a1f5e3355 AS build
 WORKDIR /opt/app-root/src
 COPY --chown=65532:0 Pipfile Pipfile.lock ./
 RUN python3.12 -m venv .venv && \
