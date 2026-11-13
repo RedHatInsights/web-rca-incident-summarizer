@@ -7,7 +7,7 @@ RUN python3.12 -m venv .venv && \
     VIRTUAL_ENV=/opt/app-root/src/.venv .venv/bin/pipenv install --deploy
 
 # Runtime stage: distroless, non-root, no shell
-FROM registry.access.redhat.com/hi/python:3.12@sha256:14ce8115a8eb67f602070b85bee19e22856a760454e74afed17a23d41cc1ddc2
+FROM registry.access.redhat.com/hi/python:3.12@sha256:6b1dfe7d49bd26204c8b965acc0e344b964d138c9679b0aff02875f2bd6aba63
 WORKDIR /opt/app-root/src
 ENV PATH=/opt/app-root/src/.venv/bin:$PATH
 COPY --from=build --chown=65532:0 /opt/app-root/src/.venv/ .venv/
